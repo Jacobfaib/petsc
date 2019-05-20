@@ -41,7 +41,7 @@ print:
 	@echo LDLIBS=$(LDLIBS)
 
 # Many suffixes are covered by implicit rules, but you may need to write custom rules
-# such as this one if you use suffixes that do not have implicit rules.
+# such as these if you use suffixes that do not have implicit rules.
 # https://www.gnu.org/software/make/manual/html_node/Catalogue-of-Rules.html#Catalogue-of-Rules
 % : %.F90
 	$(LINK.F) -o $@ $^ $(LDLIBS)
@@ -52,8 +52,15 @@ print:
 %.o: %.cxx
 	$(COMPILE.cc) $(OUTPUT_OPTION) $<
 
-# For a multi-file case, suppose you have the source files a.F90, b.c, and c.cxx, with main defined
-# in a.F90 (i.e., there is a program statement).  If the file c.cxx needs to link with a C++ standard
-# library -lstdc++ , then you'll need to add it explicitly in this circumstance.
+# For a multi-file case, suppose you have the source files a.F90, b.c, and c.cxx
+# (with a program statement appearing in a.F90 or main() appearing in the C or
+# C++ source).  This can be built by uncommenting the following two lines.
+#
 # app : a.o b.o c.o
-#	$(LINK.F) -o $@ $^ $(LDLIBS) -lstdc++
+# 	$(LINK.F) -o $@ $^ $(LDLIBS)
+
+# If the file c.cxx needs to link with a C++ standard library -lstdc++ , then
+# you'll need to add it explicitly.  It can go in the rule above or be added to
+# a target-specific variable by uncommenting the line below.
+#
+# app : LDLIBS += -lstdc++
