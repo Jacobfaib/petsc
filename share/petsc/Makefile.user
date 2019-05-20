@@ -1,21 +1,17 @@
 # -*- mode: makefile -*-
 
-# This sample (GNU) Makefile can be used to compile PETSc applications with a single source file
-# and can be easily modified to compile multi-file applications.  For example
+# This sample (GNU) Makefile can be used to compile PETSc applications with a single
+# source file and can be easily modified to compile multi-file applications.
+# It relies on pkg_config tool, and PETSC_DIR and PETSC_ARCH variables.
+# Copy this file to your source directory as "Makefile" and modify as needed.
+#
+# For example - a single source file can be compiled with:
 #
 #  $ cd src/snes/examples/tutorials/
 #  $ make -f $PETSC_DIR/share/petsc/Makefile.user ex17
 #
-# For a multi-file case, suppose you have the source files a.c, b.cpp, and c.F90, with main defined
-# in c.F90 (i.e., there is a program statement).  If the file b.cpp needs to link with a C++ standard
-# library, then you'll need to add it explicitly in this circumstance.  Copy this file to your source
-# directory as "Makefile", add the two lines below at the end, and run "make app" to build your app.
-#
-# app : a.o b.o c.F90
-#	$(LINK.F) -o $@ $^ $(LDLIBS) -lstdc++
-
-# This variable must either be a path to PETSc.pc or just "PETSc" if PETSc.pc has been
-# installed to a system location or can be found in PKG_CONFIG_PATH.
+# The following variable must either be a path to PETSc.pc or just "PETSc" if PETSc.pc
+# has been installed to a system location or can be found in PKG_CONFIG_PATH.
 PETSc.pc := $(PETSC_DIR)/$(PETSC_ARCH)/lib/pkgconfig/PETSc.pc
 
 # Additional libraries that support pkg-config can be added to the list of PACKAGES below.
@@ -49,3 +45,15 @@ print:
 # https://www.gnu.org/software/make/manual/html_node/Catalogue-of-Rules.html#Catalogue-of-Rules
 % : %.F90
 	$(LINK.F) -o $@ $^ $(LDLIBS)
+%.o: %.F90
+	$(COMPILE.F) $(OUTPUT_OPTION) $<
+% : %.cxx
+	$(LINK.cc) -o $@ $^ $(LDLIBS)
+%.o: %.cxx
+	$(COMPILE.cc) $(OUTPUT_OPTION) $<
+
+# For a multi-file case, suppose you have the source files a.F90, b.c, and c.cxx, with main defined
+# in a.F90 (i.e., there is a program statement).  If the file c.cxx needs to link with a C++ standard
+# library -lstdc++ , then you'll need to add it explicitly in this circumstance.
+# app : a.o b.o c.o
+#	$(LINK.F) -o $@ $^ $(LDLIBS) -lstdc++
