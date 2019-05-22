@@ -65,6 +65,7 @@ int main(int argc,char **args)
     ierr = PetscPrintf(PETSC_COMM_WORLD,"Error with composite add %g\n",(double)rnorm);CHKERRQ(ierr);
   }
 
+  ierr = MatCompositeSetMatStructure(B,DIFFERENT_NONZERO_PATTERN);CHKERRQ(ierr); /* default */
   ierr = MatCompositeMerge(B);CHKERRQ(ierr);
   ierr = MatMult(B,x,y);CHKERRQ(ierr);
   ierr = MatDestroy(&B);CHKERRQ(ierr);
@@ -86,23 +87,17 @@ int main(int argc,char **args)
 
   ierr = MatCreateComposite(PETSC_COMM_WORLD,nmat,A,&B);CHKERRQ(ierr);
   ierr = MatCompositeSetType(B,MAT_COMPOSITE_MULTIPLICATIVE);CHKERRQ(ierr);
+  ierr = MatCompositeSetMergeType(B,MAT_COMPOSITE_MERGE_LEFT);CHKERRQ(ierr);
+  ierr = MatSetFromOptions(B);CHKERRQ(ierr);
+  ierr = MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr); /* do MatCompositeMerge() if -mat_composite_merge 1 */
   ierr = MatMult(B,v,y);CHKERRQ(ierr);
+  ierr = MatDestroy(&B);CHKERRQ(ierr);
   ierr = VecAXPY(y,-1.0,z);CHKERRQ(ierr);
   ierr = VecNorm(y,NORM_2,&rnorm);CHKERRQ(ierr);
   if (rnorm > 10000.0*PETSC_MACHINE_EPSILON) {
     ierr = PetscPrintf(PETSC_COMM_WORLD,"Error with composite multiplicative %g\n",(double)rnorm);CHKERRQ(ierr);
   }
-
-  ierr = MatCompositeSetMergeFromRight(B,PETSC_FALSE);CHKERRQ(ierr);
-  ierr = MatCompositeMerge(B);CHKERRQ(ierr);
-  ierr = MatMult(B,v,y);CHKERRQ(ierr);
-  ierr = MatDestroy(&B);CHKERRQ(ierr);
-  ierr = VecAXPY(y,-1.0,z);CHKERRQ(ierr);
-  ierr = VecNorm(y,NORM_2,&rnorm);CHKERRQ(ierr);
-  if (rnorm > 1000000.0*PETSC_MACHINE_EPSILON) {
-    ierr = PetscPrintf(PETSC_COMM_WORLD,"Error with composite multiplicative after merge %g\n",(double)rnorm);CHKERRQ(ierr);
-  }
-
 
   /*
      Test n/2 x n multiplicative composite
@@ -117,29 +112,24 @@ int main(int argc,char **args)
 
   ierr = MatCreateComposite(PETSC_COMM_WORLD,nmat,A+2,&B);CHKERRQ(ierr);
   ierr = MatCompositeSetType(B,MAT_COMPOSITE_MULTIPLICATIVE);CHKERRQ(ierr);
+  ierr = MatSetFromOptions(B);CHKERRQ(ierr);
+  ierr = MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr); /* do MatCompositeMerge() if -mat_composite_merge 1 */
   ierr = MatMult(B,x,v2);CHKERRQ(ierr);
+  ierr = MatDestroy(&B);CHKERRQ(ierr);
   ierr = VecAXPY(v2,-1.0,v);CHKERRQ(ierr);
   ierr = VecNorm(v2,NORM_2,&rnorm);CHKERRQ(ierr);
   if (rnorm > 10000.0*PETSC_MACHINE_EPSILON) {
     ierr = PetscPrintf(PETSC_COMM_WORLD,"Error with composite multiplicative %g\n",(double)rnorm);CHKERRQ(ierr);
   }
 
-  ierr = MatCompositeMerge(B);CHKERRQ(ierr);
-  ierr = MatMult(B,x,v2);CHKERRQ(ierr);
-  ierr = MatDestroy(&B);CHKERRQ(ierr);
-  ierr = VecAXPY(v2,-1.0,v);CHKERRQ(ierr);
-  ierr = VecNorm(v2,NORM_2,&rnorm);CHKERRQ(ierr);
-  if (rnorm > 1000000.0*PETSC_MACHINE_EPSILON) {
-    ierr = PetscPrintf(PETSC_COMM_WORLD,"Error with composite multiplicative after merge %g\n",(double)rnorm);CHKERRQ(ierr);
-  }
-
   /*
      Test get functions
   */
   ierr = MatCreateComposite(PETSC_COMM_WORLD,nmat,A,&B);CHKERRQ(ierr);
-  ierr = MatCompositeGetNmat(B,&n);CHKERRQ(ierr);
+  ierr = MatCompositeGetNumberMat(B,&n);CHKERRQ(ierr);
   if (nmat != n) {
-    ierr = PetscPrintf(PETSC_COMM_WORLD,"Error with GetNMat %d != %d\n",nmat,n);CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD,"Error with GetNumberMat %D != %D\n",nmat,n);CHKERRQ(ierr);
   }
   ierr = MatCompositeGetMat(B,0,&A[nmat+2]);CHKERRQ(ierr);
   if (A[0] != A[nmat+2]) {
@@ -175,5 +165,6 @@ int main(int argc,char **args)
    test:
       nsize: 2
       requires: double
+      args: -mat_composite_merge {{0 1}shared output}
 
 TEST*/
