@@ -5,10 +5,10 @@ static const char help[] = "Test embedded sf with one leaf data item connnected 
 int main(int argc,char **argv)
 {
   PetscSF        sf,newsf;
-  PetscInt       i,nroots,nleaves,ilocal[2],leafdata,rootdata[2],nselected,selected;
+  PetscInt       i,nroots,nleaves,ilocal[2],leafdata,rootdata[2],nselected,selected,errors=0;
   PetscSFNode    iremote[2];
   PetscMPIInt    myrank,next,nproc;
-  PetscErrorCode ierr,errors = 0;
+  PetscErrorCode ierr;
 
   ierr = PetscInitialize(&argc,&argv,NULL,help);if (ierr) return ierr;
   ierr = MPI_Comm_size(PETSC_COMM_WORLD,&nproc);CHKERRQ(ierr);
@@ -28,6 +28,7 @@ int main(int argc,char **argv)
   }
 
   ierr = PetscSFCreate(PETSC_COMM_WORLD,&sf);CHKERRQ(ierr);
+  ierr = PetscSFSetFromOptions(sf);CHKERRQ(ierr);
   ierr = PetscSFSetGraph(sf,nroots,nleaves,ilocal,PETSC_COPY_VALUES,iremote,PETSC_COPY_VALUES);CHKERRQ(ierr);
 
   /* Create an embedded sf by only selecting the first root on each process */
